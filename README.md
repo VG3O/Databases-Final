@@ -1,1 +1,26 @@
 # ChatApp
+
+This application is designed to provide multiple clients with a seamless chatting experience with the following features:
+- Account creation, management, personalization
+- Chatting within multiple channels with different users present
+- Automatic message reconciliation and updating when edits are present
+
+## Development Stack
+The development stack for my app will utilize the following:
+- **FastAPI** for a well-structued and documented backend system
+- **Vite/React** for a clean front-end interface
+- **PostgreSQL** for account management and relational tables
+- **MongoDB** for message handling and filtering
+- **Redis** for live session handling, caching, and pub/sub for every connected client
+
+### Current Progress
+#### (4/6/2026)
+- Postgres and Mongo are running and can be interacted with from the backend API
+- A basic web GUI for interacting with users and messages
+
+## Runtime Instructions
+Pull the repository and and run the following command within the root of the repository:
+```bash
+  docker compose up -d
+```
+**NOTICE:** Make sure you have [Docker](https://www.docker.com/products/docker-desktop/) installed on your sysytem, since this project only runs locally!
