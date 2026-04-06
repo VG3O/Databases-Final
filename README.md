@@ -15,6 +15,7 @@ The development stack for my app will utilize the following:
 
 ### Current Progress
 #### (4/6/2026)
+- Docker containerization setup completed
 - Postgres and Mongo are running and can be interacted with from the backend API
 - A basic web GUI for interacting with users and messages
 
