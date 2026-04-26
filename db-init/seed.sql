@@ -1,20 +1,21 @@
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     user_name VARCHAR(30) NOT NULL UNIQUE,
+    password VARCHAR(30) NOT NULL,
     email VARCHAR(40) NOT NULL UNIQUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP
 );
 
-INSERT INTO users (user_name, email) VALUES
-    ('hoose', 'smoose@huh.com'),
-    ('vg3o', 'bruh@email.com'),
-    ('holdin_mcgroin', 'email@connor.com'),
-    ('bigManSees', 'newguy@email.com'),
-    ('hasbro', 'feeder@deadlock.com'),
-    ('kai', 'kai@strigid.co'),
-    ('xepois', 'british@strigid.co'),
-    ('jeffery cheeseburger', 'jeffbogo@strigid.co'),
-    ('mylo', 'fish@mail.com'),
-    ('fifth guy burger', 'burger@mail.com')
+INSERT INTO users (user_name, email, password) VALUES
+    ('hoose', 'smoose@huh.com', 'tylersnot'),
+    ('vg3o', 'bruh@email.com', 'brandoneLol'),
+    ('holdin_mcgroin', 'email@connor.com', 'ronnocRiolu'),
+    ('bigManSees', 'newguy@email.com', 'smallMan1234'),
+    ('hasbro', 'feeder@deadlock.com', 'hazlett'),
+    ('kai', 'kai@strigid.co', 'evilCeoMoment'),
+    ('xepois', 'british@strigid.co', 'programmingInBrish'),
+    ('jeffery cheeseburger', 'jeffbogo@strigid.co', 'Cheesbogo_2'),
+    ('mylo', 'fish@mail.com', '1mylo1mylo'),
+    ('fifth guy burger', 'burger@mail.com', 'FourthDudeBurger')
 ON CONFLICT (email) DO NOTHING;

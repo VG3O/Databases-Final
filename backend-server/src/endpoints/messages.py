@@ -27,8 +27,7 @@ class CreateMessage(BaseModel):
     sender_id: int
     content: str
 
-@router.post("/")
-async def send_chat_message(messageData: CreateMessage):
+async def create_message_entry(sender_id: int, content: str, channel_name: str):
     msg_db = get_messages_db()
     msg_collection: AsyncCollection = msg_db.get_collection("messages")
 
@@ -37,13 +36,18 @@ async def send_chat_message(messageData: CreateMessage):
 
     msg_document = {
         "_id" : ObjectId(),
-        "sender_id" : messageData.sender_id, # references PSQL users db
-        "content" : messageData.content,
+        "sender_id" : sender_id, # references PSQL users db
+        "content" : content,
         "sent_at" : datetime.now(timezone.utc),
-        "channel_id" : 1 # temp, may add channels later so wanted support just in case
+        "channel_id" : channel_name # temp, may add channels later so wanted support just in case
     }
 
     await msg_collection.insert_one(msg_document)
+
+@router.get("/channel")
+async def get_message_data():
+    msg_db = get_messages_db()
+    msg_collection: AsyncCollection = msg_db.get_collection("messages")
 
 @router.get("/")
 async def get_message_log():

@@ -26,6 +26,23 @@ class CreateUser(BaseModel):
     username: str
     email: str
 
+# Utilities
+def auth_user(username: str, password: str, db: Session):
+    user_obj = db.query(User).filter(User.user_name == username).first()
+    if user_obj is None: 
+        return None; # not found user
+
+    if user_obj.password == password:
+        return user_obj
+    else:
+        return -1 # wrong password
+
+def does_user_exist(id: int, db: Session):
+    user_obj = db.query(User).filter(User.id == id).first()
+    if not user_obj:
+        return False
+    return True
+
 # Endpoints
 @router.post("/")
 async def create_user_endpoint(user: CreateUser, db: Session = Depends(get_psql_db)):

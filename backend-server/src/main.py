@@ -10,15 +10,22 @@ from .postgres_db.postgres_schemas import postgres_Base
 # Mongo Dependencies
 from .mongodb.mongo import mongodb_init
 
+# Redis Dependencies
+from redis.asyncio import Redis
+
 # Endpoints
-from .endpoints import users, messages
+from .endpoints import users, messages, chat
 
 # Init API & run startup scripts
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await mongodb_init() # asynchronously initialize mongo
+
+    chat.redis_instance = Redis(host='redis', port=6379, decode_responses=True)
+
     yield # anything above this is a startup event, anything below it is a shutdown event
+    await chat.redis_instance.close()
 
 
 app = FastAPI(title="Chat App Backend", lifespan=lifespan)
@@ -29,3 +36,4 @@ postgres_Base.metadata.create_all(bind=postgres_engine)
 # router attachment
 app.include_router(users.router, prefix="/api")
 app.include_router(messages.router, prefix="/api")
+app.include_router(chat.router, prefix="/api")
