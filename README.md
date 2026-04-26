@@ -11,13 +11,16 @@ The development stack for my app will utilize the following:
 - **Vite/React** for a clean front-end interface
 - **PostgreSQL** for account management and relational tables
 - **MongoDB** for message handling and filtering
-- **Redis** for live session handling, caching, and pub/sub for every connected client
+- **Redis** for live session handling and pub/sub for every connected client
 
 ### Current Progress
 #### (4/6/2026)
 - Docker containerization setup completed
 - Postgres and Mongo are running and can be interacted with from the backend API
 - A basic web GUI for interacting with users and messages
+#### (4/26/2026), yes i know
+- Pub-sub works and clients can now see messages they send
+- First starting UI pass
 
 ## Runtime Instructions
 Pull the repository and and run the following command within the root of the repository:
