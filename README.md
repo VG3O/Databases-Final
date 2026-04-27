@@ -22,9 +22,26 @@ The development stack for my app will utilize the following:
 - Pub-sub works and clients can now see messages they send
 - First starting UI pass
 
+#### (4/27/2026)
+- Pretty much finished for the final
+- Login, create accounts, error handling
+- Channels, loading message history from mongo and saving
+- Showing username and send date
+- Known issue where logging in on another client with the same username as another active session will NOT boot the other person off the session 
+
 ## Runtime Instructions
 Pull the repository and and run the following command within the root of the repository:
 ```bash
   docker compose up -d
 ```
 **NOTICE:** Make sure you have [Docker](https://www.docker.com/products/docker-desktop/) installed on your sysytem, since this project only runs locally!
+
+Adminer Interface Credentials:
+- Server: postgres
+- Username: postgres
+- Password: postgres
+- Database: chatdb
+
+Mongo Express Credentials:
+- Username: admin
+- password: admin

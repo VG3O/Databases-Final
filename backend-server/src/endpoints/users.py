@@ -25,6 +25,7 @@ router = APIRouter(prefix="/users", tags=["Users"])
 class CreateUser(BaseModel):
     username: str
     email: str
+    password: str
 
 # Utilities
 def auth_user(username: str, password: str, db: Session):
@@ -43,11 +44,9 @@ def does_user_exist(id: int, db: Session):
         return False
     return True
 
-# Endpoints
 @router.post("/")
 async def create_user_endpoint(user: CreateUser, db: Session = Depends(get_psql_db)):
-    print(user)
-    return create_user(db, user.username, user.email)
+    return create_user(db, user.username, user.email, user.password)
 
 @router.get("/{user_id}")
 async def get_user_endpoint(user_id: int, db: Session = Depends(get_psql_db)):

@@ -7,10 +7,15 @@ CREATE TABLE IF NOT EXISTS users (
     deleted_at TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS channels (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(30) NOT NULL UNIQUE
+);
+
 INSERT INTO users (user_name, email, password) VALUES
     ('hoose', 'smoose@huh.com', 'tylersnot'),
     ('vg3o', 'bruh@email.com', 'brandoneLol'),
-    ('holdin_mcgroin', 'email@connor.com', 'ronnocRiolu'),
+    ('holdin_mcgroin', 'email@connor.com', 'ronnocRile'),
     ('bigManSees', 'newguy@email.com', 'smallMan1234'),
     ('hasbro', 'feeder@deadlock.com', 'hazlett'),
     ('kai', 'kai@strigid.co', 'evilCeoMoment'),
@@ -19,3 +24,7 @@ INSERT INTO users (user_name, email, password) VALUES
     ('mylo', 'fish@mail.com', '1mylo1mylo'),
     ('fifth guy burger', 'burger@mail.com', 'FourthDudeBurger')
 ON CONFLICT (email) DO NOTHING;
+
+INSERT INTO channels (name) 
+VALUES ('general'), ('gaming'), ('off-topic') 
+ON CONFLICT (name) DO NOTHING;

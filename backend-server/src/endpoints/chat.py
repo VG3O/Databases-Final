@@ -15,22 +15,32 @@ from bson import ObjectId
 import json
 import jwt
 import asyncio
+import logging
+import sys
 
 # Project Mongo Dependencies
-from ..mongodb.mongo import get_messages_db
 
 # Project Postgres Dependencies
 from sqlalchemy.orm import Session
-from ..postgres_db.postgres_schemas import User
+from ..postgres_db.postgres_schemas import User, TextChannel
 from ..postgres_db.postgres_utils import get_psql_db, get_user, create_user
 
-from . import users
+from . import users, messages
 
 # Project Redis Dependencies
 from redis.asyncio import Redis
 
 SECRET = "woopswoopswoopswoops"
 ENCRYPTION_ALG = "HS256"
+
+# debug
+logger = logging.getLogger(__name__)
+handler = logging.StreamHandler(sys.stdout)
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.setLevel(logging.DEBUG)
 
 redis_instance: Redis = None # we init this in main.py
 router = APIRouter(prefix="/chat")
@@ -52,12 +62,12 @@ class ConnectionManager:
             await connection
 
 
-# data strucutres
-CHANNEL_IDS: list[str] = [
-    "general",
-    "gaming",
-    "offtopic"
-]
+# data strucutres & utils
+def get_channels(db: Session):
+    return db.query(TextChannel).all()
+
+def get_channel(id: int, db: Session):
+    return db.query(TextChannel).filter(TextChannel.id == id).first()
 
 class RequestLogin(BaseModel):
     username: str
@@ -96,6 +106,7 @@ async def user_login_endpoint(socket: WebSocket, db: Session = Depends(get_psql_
     await connection_manager.connect(socket)
 
     user_id = -1
+
     # decrypt auth token
     try:
         msg = await socket.receive_text()
@@ -103,41 +114,58 @@ async def user_login_endpoint(socket: WebSocket, db: Session = Depends(get_psql_
         auth_token = auth_data.get("token")
 
         data = jwt.decode(auth_token, SECRET, algorithms=[ENCRYPTION_ALG])
-        
+
         user_id = data.get("user_id")
 
         if not users.does_user_exist(user_id, db=db):
-            await socket.send_json({"error_msg": "User not found"})
+            logger.warning(f"Disconnecting, user id was not found in DB (ID: {user_id})")
+            await socket.send_json({"type": "error","error_msg": "User not found"})
             await connection_manager.disconnect(socket)
             return
     except jwt.ExpiredSignatureError:
-        await socket.send_json({"error_msg": "Expired token"})
+        logger.warning(f"Disconnecting, token expired.")
+        await socket.send_json({"type": "error","error_msg": "Expired token"})
         await connection_manager.disconnect(socket)
         return
     except jwt.InvalidTokenError:
-        await socket.send_json({"error_msg": "Invalid token"})
+        logger.warning(f"Disconnecting, invalid token.")
+        await socket.send_json({"type": "error","error_msg": "Invalid token"})
         await connection_manager.disconnect(socket)
         return
-    
-    await socket.send_json({
-        "status": "connected"
-    })
 
+    # pubsub subscriptions
     try: 
         publisher = redis_instance.pubsub()
-        await publisher.subscribe("general")
+        channels = [channel for channel in get_channels(db=db)]
+        channel_names = [channel.name for channel in channels]
+        await socket.send_json({
+            "type": "update_channels", 
+            "channels": [
+                            {
+                                "id": channel.id,
+                                "name": channel.name
+                            }
+                            for channel in channels
+                        ]});
+        await publisher.subscribe(*channel_names)
 
-        print("SUBSCRIBED TO:", publisher.channels)
-        # for channel_id in CHANNEL_IDS:
-        #     await publisher.subscribe(channel_id)
+        # send message history to client, default to first channel in db
+        channel_messages = await messages.get_channel_messages(1, usersdb=db)
+        await socket.send_json({
+                    "type": "history",
+                    "messages": channel_messages
+                })
+
+        logger.debug("SUBSCRIBED TO:", publisher.channels)
     except Exception as e:
-        await socket.send_json({"error": "Internal Server Error"})
+        logger.error(f"Internal Server Error: {e}.")
+        await socket.send_json({"type": "error","error_msg": "Internal Server Error"})
         await connection_manager.disconnect(socket)
         return;
 
     async def publisher_listener():
         async for msg in publisher.listen():
-            print(msg)
+            logger.debug(f"REDIS RECV: {msg}")
             if msg["type"] == "message":
                 await socket.send_text(msg["data"])
             
@@ -147,15 +175,42 @@ async def user_login_endpoint(socket: WebSocket, db: Session = Depends(get_psql_
     try:
         while True:
             data = await socket.receive_json()
-            data["sender_id"] = user_id
+            logger.debug(f"Incoming message: {data}")
+            message_type = data.get("type")
 
-            channel_name = data.get("channel")
-            if not channel_name:
-                continue
+            # determine message type
+            if message_type == "post":
+                channel_id = data.get("channel")
+                if not channel_id: 
+                    continue
 
-            #todo: call message save function to save message to mongo, already implemented need to add here
+                channel = get_channel(channel_id, db=db)
 
-            await redis_instance.publish(channel_name, json.dumps(data))
+                message_data = await messages.create_message_entry(
+                    sender_id=user_id, 
+                    channel_id=channel_id,
+                    content=data["content"],
+                    usersdb=db
+                )
+                message_data["type"] = "publish"
+                logger.debug(channel.name)
+                await redis_instance.publish(channel.name, json.dumps(message_data))
+            elif message_type == "history":
+                channel_id= data.get("channel")
+                if not channel_id: 
+                    continue
+                
+                channel = get_channel(channel_id, db=db)
+                if channel is None:
+                    continue
+
+                # get messages from channel
+                channel_messages = await messages.get_channel_messages(channel_id, usersdb=db)
+                
+                await socket.send_json({
+                    "type": "history",
+                    "messages": channel_messages
+                })
     except WebSocketDisconnect:
         task.cancel()
         try:

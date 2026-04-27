@@ -1,4 +1,3 @@
-
 .content_display
 {
     padding-left: 2%;
@@ -10,7 +9,37 @@
 }
 
 body {
-  background-color: #3c3766;
-  margin: 0;
-  padding: 0;
+   background-color: #26177c;
+}
+
+@keyframes backgroundScroller {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 1000px 1000px;
+  }
+}
+
+.app-background {
+  position: fixed;
+  inset: 0;
+  background-image: url("./assets/vg.jpg");
+  /* background-size: cover; */
+  background-position: center;
+  background-repeat: repeat;
+  animation: backgroundScroller 45s linear infinite;
+  z-index: 0;
+}
+
+.app-blur {
+  position: fixed;
+  inset: 0;
+  background: rgba(65, 35, 231, 0.5);
+  z-index: 1;
+}
+
+.app-content-display {
+  position: relative;
+  z-index: 2;
 }

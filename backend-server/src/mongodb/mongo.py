@@ -20,7 +20,7 @@ async def mongodb_init():
 
         msg_collection: AsyncCollection = mongo_chatdb.get_collection("messages")
         await msg_collection.create_index([
-            ("sender_id", ASCENDING),
+            ("channel_id", 1),
             ("sent_at", ASCENDING)
         ])
         

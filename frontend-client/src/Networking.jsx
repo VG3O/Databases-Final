@@ -12,12 +12,12 @@ export async function chatLogin(username, password) {
     return result.json();
 }
 
-export function createWebSocket(token)
+export function createWebSocket(token, user_id)
 {
     const socket = new WebSocket("ws://localhost:8000/api/chat/ws");
 
     socket.onopen = () => { // send our auth token to confirm we are connecting
-        socket.send(JSON.stringify({"token": token}));
+        socket.send(JSON.stringify({"token": token, "user_id": user_id}));
     }
 
     return socket;
