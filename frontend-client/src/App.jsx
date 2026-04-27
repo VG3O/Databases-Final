@@ -187,6 +187,12 @@ function ChatWindow(
     setContainerAtBottom(isAtBottom);
   }
 
+  const handleInput = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessageEvent();
+    }
+  }
   
   useEffect(() => {
     const element = containerRef.current;
@@ -239,6 +245,7 @@ function ChatWindow(
           <Input
             placeholder="Type your message here..."
             value={input}
+            onKeyDown={handleInput}
             onChange={(e) => setInput(e.target.value)}
             width="100%"
           />
@@ -361,7 +368,11 @@ function App() {
 
   useEffect(() => {
     channelIdRef.current = currentChannelId;
-  }, [currentChannelId])
+    if (channels.length > 0)
+    {
+      setActiveChannelName(channels.find(c => c.id === channelIdRef.current).name);
+    }
+  }, [currentChannelId, channels])
 
   useEffect(() => {
     if (!authToken) return;
@@ -388,7 +399,8 @@ function App() {
             id: m.id,
             name: m.name
           })));
-          }
+          setCurrentChannel(1);
+        }
         else if (message.type === "publish")
         {
           if (channelIdRef.current == message.channel_id) 
